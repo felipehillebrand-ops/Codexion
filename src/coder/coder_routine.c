@@ -14,6 +14,8 @@
 
 static void	do_compile(t_coder *coder)
 {
+	if (is_simulation_stopped(coder->data))
+		return ;
 	coder_set_compile_start(coder, get_timestamp_ms(coder->data));
 	log_state_change(coder->data, coder->id, STATE_COMPILING);
 	usleep(coder->data->time_to_compile * 1000);
@@ -36,9 +38,10 @@ void	*coder_routine(void *arg)
 {
 	t_coder	*coder;
 
-	coder = (t_coder *)arg
+	coder = (t_coder *)arg;
 	while (!is_simulation_stopped(coder->data)
-		&& coder_get_compiles_done(coder) < coder->data->number_of_compiles_required)
+		&& coder_get_compiles_done(coder)
+		< coder->data->number_of_compiles_required)
 	{
 		if (coder_acquire_dongles(coder) != 0)
 			break ;
@@ -47,6 +50,8 @@ void	*coder_routine(void *arg)
 		if (is_simulation_stopped(coder->data))
 			break ;
 		do_debug(coder);
+		if (is_simulation_stopped(coder->data))
+			break ;
 		do_refactor(coder);
 	}
 	return (NULL);

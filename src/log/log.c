@@ -41,3 +41,16 @@ void	log_state_change(t_data *data, int coder_id, t_coder_state state)
 {
 	print_log_line(data, coder_id, state_to_string(state));
 }
+
+void	print_debug_summary(t_data *data)
+{
+	int	i;
+
+	i = 0;
+	while (i < data->number_of_coders)
+	{
+		fprintf(stderr, "[debug] coder %d compiled %d times\n",
+			data->coders[i].id, coder_get_compiles_done(&data->coders[i]));
+		i++;
+	}
+}

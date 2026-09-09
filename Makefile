@@ -3,20 +3,21 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: fjose-hi <fjose-hi@student.42porto.com>    +#+  +:+       +#+         #
+#    By: fjose-hi <fjose-hi@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/08/17 21:06:09 by fjose-hi          #+#    #+#              #
-#    Updated: 2026/09/07 17:35:27 by fjose-hi         ###   ########.fr        #
+#    Updated: 2026/09/09 16:48:41 by fjose-hi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = codexion
 CC = cc
-CFLAGS = -Wall -Wextra -Werror -pthread -std=c89 -I includes
+CFLAGS = -Wall -Wextra -Werror -pthread -I includes
 
 SRCS =	src/main.c \
 		src/parsing/parse.c \
-        src/init/init.c \
+        src/init/init_data_coders.c \
+        src/init/init_dongles.c \
         src/heap/heap.c \
         src/heap/heap_utils.c \
         src/dongle/dongle_acquire.c \

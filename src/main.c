@@ -56,6 +56,7 @@ int	main(int argc, char **argv)
 	if (init_data(&data) != 0)
 		return (1);
 	status = run_simulation(&data);
+	print_debug_summary(&data);
 	clean_data(&data);
 	if (status != 0)
 		return (1);

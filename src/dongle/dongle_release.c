@@ -24,11 +24,6 @@ void	dongle_release_single(t_coder *coder, t_dongle *dongle)
 
 void	coder_release_dongles(t_coder *coder)
 {
-	if (coder->left_dongle == coder->right_dongle)
-	{
-		dongle_release_single(coder, coder->left_dongle);
-		return ;
-	}
 	dongle_release_single(coder, coder->left_dongle);
 	dongle_release_single(coder, coder->right_dongle);
 }

@@ -60,12 +60,16 @@ int	dongle_acquire_single(t_coder *coder, t_dongle *dongle)
 	t_heap_node	popped;
 
 	pthread_mutex_lock(&dongle->lock);
+	if (is_simulation_stopped(coder->data))
+		return (pthread_mutex_unlock(&dongle->lock), -1);
 	key = compute_request_key(coder, dongle);
 	if (heap_push(&dongle->waiting_queue, key, coder->id) != 0)
 		return (pthread_mutex_unlock(&dongle->lock), -1);
 	if (dongle_wait_loop(coder->data, dongle, coder->id) != 0)
 		return (pthread_mutex_unlock(&dongle->lock), -1);
 	heap_pop(&dongle->waiting_queue, &popped);
+	if (is_simulation_stopped(coder->data))
+		return (pthread_mutex_unlock(&dongle->lock), -1);
 	dongle->is_available = 0;
 	pthread_mutex_unlock(&dongle->lock);
 	log_dongle_taken(coder->data, coder->id);
@@ -77,8 +81,6 @@ int	coder_acquire_dongles(t_coder *coder)
 	t_dongle	*first;
 	t_dongle	*second;
 
-	if (coder->left_dongle == coder->right_dongle)
-		return (dongle_acquire_single(coder, coder->left_dongle));
 	if (coder->left_dongle->id < coder->right_dongle->id)
 	{
 		first = coder->left_dongle;

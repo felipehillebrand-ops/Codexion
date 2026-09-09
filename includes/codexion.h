@@ -118,6 +118,7 @@ int		parse_args(t_data *data, char **argv);
 
 /* ---- Init functions ---- */
 int		init_data(t_data *data);
+int		init_dongles(t_data *data);
 
 /* ---- Heap functions ---- */
 void	heapify_up(t_heap *heap, int idx);
@@ -142,6 +143,7 @@ int		coder_get_compiles_done(t_coder *coder);
 /* ---- Log functions ---- */
 void	log_dongle_taken(t_data *data, int coder_id);
 void	log_state_change(t_data *data, int coder_id, t_coder_state state);
+void	print_debug_summary(t_data *data);
 
 /* ---- Monitor functions ---- */
 void	*monitor_routine(void *arg);

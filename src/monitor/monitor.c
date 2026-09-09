@@ -19,6 +19,9 @@ static int	check_burnout(t_data *data, int i)
 	long	elapsed;
 	long	since;
 
+	if (coder_get_compiles_done(&data->coders[i])
+		>= data->number_of_compiles_required)
+		return (0);
 	since = coder_get_last_compile_start(&data->coders[i]);
 	elapsed = get_timestamp_ms(data) - since;
 	if (elapsed >= data->time_to_burnout)

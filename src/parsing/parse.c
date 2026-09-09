@@ -84,6 +84,9 @@ int	parse_args(t_data *data, char **argv)
 	if (parse_positive_long(argv[7], &data->dongle_cooldown) != 0)
 		return (fprintf(stderr, "Error: invalid dongle_cooldown\n"), -1);
 	if (is_valid_scheduler(argv[8], &data->scheduler) != 0)
-		return (fprintf(stderr, "Error: scheduler must be 'fifo' or 'edf'\n"), -1);
+		return (
+			fprintf(stderr,
+				"Error: scheduler must be 'fifo' or 'edf'\n"),
+			-1);
 	return (0);
 }
