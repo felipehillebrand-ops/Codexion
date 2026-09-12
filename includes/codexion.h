@@ -22,9 +22,10 @@
 # include <limits.h>
 
 /* ---- Constants ---- */
-# define ARG_COUNT		9
-# define SCHED_FIFO_STR	"fifo"
-# define SCHED_EDF_STR	"edf"
+# define ARG_COUNT				9
+# define SCHED_FIFO_STR			"fifo"
+# define SCHED_EDF_STR			"edf"
+# define DONGLE_POLL_MS			50
 
 /* ---- Scheduler type ---- */
 typedef enum e_sched_type
@@ -121,13 +122,20 @@ int		init_data(t_data *data);
 int		init_dongles(t_data *data);
 
 /* ---- Heap functions ---- */
+int		heap_has_priority(t_heap_node *a, t_heap_node *b);
 void	heapify_up(t_heap *heap, int idx);
 void	heapify_down(t_heap *heap, int idx);
 int		heap_push(t_heap *heap, long key, int coder_id);
 int		heap_pop(t_heap *heap, t_heap_node *out);
+int		heap_remove_by_id(t_heap *heap, int coder_id);
 
 /* ---- Dongle functions ---- */
+long	compute_request_key(t_coder *coder, t_dongle *dongle);
+int		dongle_is_ready(t_data *data, t_dongle *dongle, int coder_id);
+void	order_dongles(t_coder *coder, t_dongle **first, t_dongle **second);
 int		dongle_acquire_single(t_coder *coder, t_dongle *dongle);
+int		dongle_acquire_single_timed(t_coder *coder, t_dongle *dongle,
+			long timeout_ms);
 void	dongle_release_single(t_coder *coder, t_dongle *dongle);
 int		coder_acquire_dongles(t_coder *coder);
 void	coder_release_dongles(t_coder *coder);

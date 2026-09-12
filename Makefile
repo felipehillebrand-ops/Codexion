@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: fjose-hi <fjose-hi@student.42.fr>          +#+  +:+       +#+         #
+#    By: fjose-hi <fjose-hi@student.42porto.com>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/08/17 21:06:09 by fjose-hi          #+#    #+#              #
-#    Updated: 2026/09/09 16:48:41 by fjose-hi         ###   ########.fr        #
+#    Updated: 2026/09/12 17:34:24 by fjose-hi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,6 +21,7 @@ SRCS =	src/main.c \
         src/heap/heap.c \
         src/heap/heap_utils.c \
         src/dongle/dongle_acquire.c \
+        src/dongle/dongle_acquire_timed.c \
         src/dongle/dongle_release.c \
 		src/coder/coder_routine.c \
         src/coder/coder_progress.c \

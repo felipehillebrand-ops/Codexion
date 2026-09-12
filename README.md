@@ -32,7 +32,7 @@ make fclean   # removes object files and the binary
 make re       # fclean + all
 ```
 
-### Run
+### Execution
 ```sh
 ./codexion number_of_coders time_to_burnout time_to_compile time_to_debug \
            time_to_refactor number_of_compiles_required dongle_cooldown scheduler
@@ -47,14 +47,7 @@ Example:
 ```
 
 ### Compilation flags
-The project builds in C89 (`-std=c89`) with `-Wall -Wextra -Werror -pthread`.
-On Linux, `-D_DEFAULT_SOURCE` is also required: `usleep()` is a POSIX
-function (explicitly listed as an allowed external function by the
-subject), not part of the C89 standard itself, so glibc hides its
-declaration under strict C89 mode unless a POSIX feature-test macro is
-defined. This flag does not relax the language dialect the compiler
-accepts — it only restores visibility of the POSIX declarations the
-subject already requires us to use.
+The project builds with `-Wall -Wextra -Werror -pthread`.
 
 ## Blocking cases handled
 
