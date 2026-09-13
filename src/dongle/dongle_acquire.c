@@ -12,14 +12,7 @@
 
 #include "codexion.h"
 
-long	compute_request_key(t_coder *coder, t_dongle *dongle)
-{
-	if (coder->data->scheduler == CX_SCHED_FIFO)
-		return (dongle->request_counter++);
-	return (coder_get_last_compile_start(coder) + coder->data->time_to_burnout);
-}
-
-int	dongle_is_ready(t_data *data, t_dongle *dongle, int coder_id)
+static int	dongle_is_ready(t_data *data, t_dongle *dongle, int coder_id)
 {
 	if (dongle->waiting_queue.size == 0)
 		return (0);
@@ -52,17 +45,11 @@ static int	dongle_wait_loop(t_data *data, t_dongle *dongle, int coder_id)
 	return (0);
 }
 
-int	dongle_acquire_single(t_coder *coder, t_dongle *dongle)
+static	int	dongle_wait_and_take(t_coder *coder, t_dongle *dongle)
 {
-	long		key;
 	t_heap_node	popped;
 
 	pthread_mutex_lock(&dongle->lock);
-	if (is_simulation_stopped(coder->data))
-		return (pthread_mutex_unlock(&dongle->lock), -1);
-	key = compute_request_key(coder, dongle);
-	if (heap_push(&dongle->waiting_queue, key, coder->id) != 0)
-		return (pthread_mutex_unlock(&dongle->lock), -1);
 	if (dongle_wait_loop(coder->data, dongle, coder->id) != 0)
 		return (pthread_mutex_unlock(&dongle->lock), -1);
 	heap_pop(&dongle->waiting_queue, &popped);
@@ -74,15 +61,39 @@ int	dongle_acquire_single(t_coder *coder, t_dongle *dongle)
 	return (0);
 }
 
+static void	order_dongles(t_coder *coder, t_dongle **first, t_dongle **second)
+{
+	if (coder->left_dongle->id < coder->right_dongle->id)
+	{
+		*first = coder->left_dongle;
+		*second = coder->right_dongle;
+	}
+	else
+	{
+		*first = coder->right_dongle;
+		*second = coder->left_dongle;
+	}
+}
+
 int	coder_acquire_dongles(t_coder *coder)
 {
 	t_dongle	*first;
 	t_dongle	*second;
 
 	order_dongles(coder, &first, &second);
-	if (dongle_acquire_single(coder, first) != 0)
+	if (dongle_enqueue(coder, first) != 0)
 		return (-1);
-	if (dongle_acquire_single(coder, second) != 0)
+	if (dongle_enqueue(coder, second) != 0)
+	{
+		dongle_dequeue(coder, first);
+		return (-1);
+	}
+	if (dongle_wait_and_take(coder, first) != 0)
+	{
+		dongle_dequeue(coder, second);
+		return (-1);
+	}
+	if (dongle_wait_and_take(coder, second) != 0)
 	{
 		dongle_release_single(coder, first);
 		return (-1);

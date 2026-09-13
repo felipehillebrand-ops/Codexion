@@ -130,14 +130,10 @@ int		heap_pop(t_heap *heap, t_heap_node *out);
 int		heap_remove_by_id(t_heap *heap, int coder_id);
 
 /* ---- Dongle functions ---- */
-long	compute_request_key(t_coder *coder, t_dongle *dongle);
-int		dongle_is_ready(t_data *data, t_dongle *dongle, int coder_id);
-void	order_dongles(t_coder *coder, t_dongle **first, t_dongle **second);
-int		dongle_acquire_single(t_coder *coder, t_dongle *dongle);
-int		dongle_acquire_single_timed(t_coder *coder, t_dongle *dongle,
-			long timeout_ms);
-void	dongle_release_single(t_coder *coder, t_dongle *dongle);
+int		dongle_enqueue(t_coder *coder, t_dongle *dongle);
+void	dongle_dequeue(t_coder *coder, t_dongle *dongle);
 int		coder_acquire_dongles(t_coder *coder);
+void	dongle_release_single(t_coder *coder, t_dongle *dongle);
 void	coder_release_dongles(t_coder *coder);
 void	wake_all_dongles(t_data *data);
 
