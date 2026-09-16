@@ -12,25 +12,27 @@
 
 #include "codexion.h"
 
-#define MONITOR_POLL_MS 1
-
 static int	check_burnout(t_data *data, int i)
 {
-	long	elapsed;
-	long	since;
+	t_coder	*coder;
+	long	now;
+	int		burned;
 
-	if (coder_get_compiles_done(&data->coders[i])
-		>= data->number_of_compiles_required)
-		return (0);
-	since = coder_get_last_compile_start(&data->coders[i]);
-	elapsed = get_timestamp_ms(data) - since;
-	if (elapsed >= data->time_to_burnout)
+	coder = &data->coders[i];
+	pthread_mutex_lock(&data->log_lock);
+	pthread_mutex_lock(&coder->progress_lock);
+	now = get_timestamp_ms(data);
+	burned = !is_simulation_stopped(data)
+		&& coder->compiles_done < data->number_of_compiles_required
+		&& now - coder->last_compile_start >= data->time_to_burnout;
+	if (burned)
 	{
-		log_state_change(data, data->coders[i].id, STATE_BURNED_OUT);
 		set_simulation_stopped(data);
-		return (1);
+		printf("%ld %d burned out\n", now, coder->id);
 	}
-	return (0);
+	pthread_mutex_unlock(&coder->progress_lock);
+	pthread_mutex_unlock(&data->log_lock);
+	return (burned);
 }
 
 static int	check_all_done(t_data *data)
@@ -54,6 +56,8 @@ void	*monitor_routine(void *arg)
 	int		i;
 
 	data = (t_data *)arg;
+	if (!wait_for_start(data))
+		return (NULL);
 	while (!is_simulation_stopped(data))
 	{
 		i = 0;

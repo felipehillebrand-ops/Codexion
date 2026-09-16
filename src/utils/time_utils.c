@@ -26,7 +26,7 @@ long	get_timestamp_ms(t_data *data)
 	gettimeofday(&now, NULL);
 	sec_diff = now.tv_sec - data->start_time.tv_sec;
 	usec_diff = now.tv_usec - data->start_time.tv_usec;
-	return (sec_diff * 1000 + usec_diff / 1000);
+	return ((sec_diff * 1000000 + usec_diff) / 1000);
 }
 
 void	ms_to_abstime(t_data *data, long target_ms, struct timespec *ts)
@@ -36,4 +36,23 @@ void	ms_to_abstime(t_data *data, long target_ms, struct timespec *ts)
 	usec = data->start_time.tv_usec + (target_ms % 1000) * 1000;
 	ts->tv_sec = data->start_time.tv_sec + target_ms / 1000 + usec / 1000000;
 	ts->tv_nsec = (usec % 1000000) * 1000;
+}
+
+int	sleep_ms(t_data *data, long duration)
+{
+	struct timeval	start;
+	struct timeval	now;
+	long			elapsed;
+
+	gettimeofday(&start, NULL);
+	while (!is_simulation_stopped(data))
+	{
+		gettimeofday(&now, NULL);
+		elapsed = (now.tv_sec - start.tv_sec) * 1000000;
+		elapsed += now.tv_usec - start.tv_usec;
+		if (elapsed / 1000 >= duration)
+			return (1);
+		usleep(500);
+	}
+	return (0);
 }

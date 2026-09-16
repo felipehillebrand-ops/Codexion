@@ -17,10 +17,9 @@ static void	destroy_dongles(t_data *data)
 	int	i;
 
 	i = 0;
-	while (i < data->number_of_coders)
+	while (i < data->dongles_ready)
 	{
 		pthread_mutex_destroy(&data->dongles[i].lock);
-		pthread_cond_destroy(&data->dongles[i].cond);
 		free(data->dongles[i].waiting_queue.nodes);
 		i++;
 	}
@@ -32,7 +31,7 @@ static void	destroy_coders(t_data *data)
 	int	i;
 
 	i = 0;
-	while (i < data->number_of_coders)
+	while (i < data->coders_ready)
 	{
 		pthread_mutex_destroy(&data->coders[i].progress_lock);
 		i++;
@@ -44,6 +43,14 @@ void	clean_data(t_data *data)
 {
 	destroy_coders(data);
 	destroy_dongles(data);
-	pthread_mutex_destroy(&data->log_lock);
-	pthread_mutex_destroy(&data->stop_lock);
+	if (data->sync_ready >= 5)
+		pthread_cond_destroy(&data->request_cond);
+	if (data->sync_ready >= 4)
+		pthread_mutex_destroy(&data->request_lock);
+	if (data->sync_ready >= 3)
+		pthread_cond_destroy(&data->start_cond);
+	if (data->sync_ready >= 2)
+		pthread_mutex_destroy(&data->stop_lock);
+	if (data->sync_ready >= 1)
+		pthread_mutex_destroy(&data->log_lock);
 }

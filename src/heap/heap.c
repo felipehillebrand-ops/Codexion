@@ -12,11 +12,12 @@
 
 #include "codexion.h"
 
-int	heap_push(t_heap *heap, long key, int coder_id)
+int	heap_push(t_heap *heap, long key, long order, int coder_id)
 {
 	if (heap->size >= heap->capacity)
 		return (fprintf(stderr, "Error: heap is full\n"), -1);
 	heap->nodes[heap->size].key = key;
+	heap->nodes[heap->size].order = order;
 	heap->nodes[heap->size].coder_id = coder_id;
 	heap->size++;
 	heapify_up(heap, heap->size - 1);

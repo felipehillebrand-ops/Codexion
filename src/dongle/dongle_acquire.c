@@ -12,91 +12,52 @@
 
 #include "codexion.h"
 
-static int	dongle_is_ready(t_data *data, t_dongle *dongle, int coder_id)
-{
-	if (dongle->waiting_queue.size == 0)
-		return (0);
-	if (dongle->waiting_queue.nodes[0].coder_id != coder_id)
-		return (0);
-	if (!dongle->is_available)
-		return (0);
-	if (get_timestamp_ms(data) < dongle->available_at_ms)
-		return (0);
-	return (1);
-}
-
-static int	dongle_wait_loop(t_data *data, t_dongle *dongle, int coder_id)
+static int	wait_for_pair(t_coder *coder)
 {
 	struct timespec	ts;
 	long			wake_ms;
+	int				taken;
 
-	while (!dongle_is_ready(data, dongle, coder_id))
+	taken = 0;
+	pthread_mutex_lock(&coder->data->request_lock);
+	while (!is_simulation_stopped(coder->data) && !taken)
 	{
-		if (is_simulation_stopped(data))
-			return (-1);
-		if (dongle->is_available
-			&& get_timestamp_ms(data) < dongle->available_at_ms)
-			wake_ms = dongle->available_at_ms;
-		else
-			wake_ms = get_timestamp_ms(data) + DONGLE_POLL_MS;
-		ms_to_abstime(data, wake_ms, &ts);
-		pthread_cond_timedwait(&dongle->cond, &dongle->lock, &ts);
+		taken = coder_try_pair(coder, &wake_ms);
+		if (!taken)
+		{
+			ms_to_abstime(coder->data, wake_ms, &ts);
+			pthread_cond_timedwait(&coder->data->request_cond,
+				&coder->data->request_lock, &ts);
+		}
 	}
-	return (0);
+	if (!taken)
+		coder_drop_request(coder);
+	pthread_cond_broadcast(&coder->data->request_cond);
+	pthread_mutex_unlock(&coder->data->request_lock);
+	return (!taken);
 }
 
-static	int	dongle_wait_and_take(t_coder *coder, t_dongle *dongle)
+static int	wait_single(t_coder *coder)
 {
-	t_heap_node	popped;
-
-	pthread_mutex_lock(&dongle->lock);
-	if (dongle_wait_loop(coder->data, dongle, coder->id) != 0)
-		return (pthread_mutex_unlock(&dongle->lock), -1);
-	heap_pop(&dongle->waiting_queue, &popped);
-	if (is_simulation_stopped(coder->data))
-		return (pthread_mutex_unlock(&dongle->lock), -1);
-	dongle->is_available = 0;
-	pthread_mutex_unlock(&dongle->lock);
 	log_dongle_taken(coder->data, coder->id);
-	return (0);
-}
-
-static void	order_dongles(t_coder *coder, t_dongle **first, t_dongle **second)
-{
-	if (coder->left_dongle->id < coder->right_dongle->id)
-	{
-		*first = coder->left_dongle;
-		*second = coder->right_dongle;
-	}
-	else
-	{
-		*first = coder->right_dongle;
-		*second = coder->left_dongle;
-	}
+	while (!is_simulation_stopped(coder->data))
+		usleep(500);
+	dongle_release_single(coder, coder->left_dongle);
+	return (-1);
 }
 
 int	coder_acquire_dongles(t_coder *coder)
 {
-	t_dongle	*first;
-	t_dongle	*second;
-
-	order_dongles(coder, &first, &second);
-	if (dongle_enqueue(coder, first) != 0)
-		return (-1);
-	if (dongle_enqueue(coder, second) != 0)
+	if (coder_get_compiles_done(coder) == 0)
 	{
-		dongle_dequeue(coder, first);
-		return (-1);
+		if (!wait_initial_slot(coder))
+			return (-1);
 	}
-	if (dongle_wait_and_take(coder, first) != 0)
-	{
-		dongle_dequeue(coder, second);
+	else if (coder_queue_request(coder) != 0)
 		return (-1);
-	}
-	if (dongle_wait_and_take(coder, second) != 0)
-	{
-		dongle_release_single(coder, first);
+	if (wait_for_pair(coder) != 0)
 		return (-1);
-	}
+	if (coder->left_dongle == coder->right_dongle)
+		return (wait_single(coder));
 	return (0);
 }

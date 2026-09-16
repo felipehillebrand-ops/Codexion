@@ -67,7 +67,8 @@ int	parse_args(t_data *data, char **argv)
 {
 	long	tmp;
 
-	if (parse_positive_long(argv[1], &tmp) != 0 || tmp == 0)
+	if (parse_positive_long(argv[1], &tmp) != 0
+		|| tmp == 0 || tmp > INT_MAX)
 		return (fprintf(stderr, "Error: invalid number_of_coders\n"), -1);
 	data->number_of_coders = (int)tmp;
 	if (parse_positive_long(argv[2], &data->time_to_burnout) != 0)
@@ -78,7 +79,7 @@ int	parse_args(t_data *data, char **argv)
 		return (fprintf(stderr, "Error: invalid time_to_debug\n"), -1);
 	if (parse_positive_long(argv[5], &data->time_to_refactor) != 0)
 		return (fprintf(stderr, "Error: invalid time_to_refactor\n"), -1);
-	if (parse_positive_long(argv[6], &tmp) != 0)
+	if (parse_positive_long(argv[6], &tmp) != 0 || tmp > INT_MAX)
 		return (fprintf(stderr, "Error: invalid n_compiles_required\n"), -1);
 	data->number_of_compiles_required = (int)tmp;
 	if (parse_positive_long(argv[7], &data->dongle_cooldown) != 0)

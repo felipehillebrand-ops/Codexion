@@ -26,5 +26,33 @@ void	set_simulation_stopped(t_data *data)
 {
 	pthread_mutex_lock(&data->stop_lock);
 	data->simulation_stopped = 1;
+	pthread_cond_broadcast(&data->start_cond);
+	pthread_mutex_unlock(&data->stop_lock);
+}
+
+int	wait_for_start(t_data *data)
+{
+	int	started;
+
+	pthread_mutex_lock(&data->stop_lock);
+	while (!data->simulation_started && !data->simulation_stopped)
+		pthread_cond_wait(&data->start_cond, &data->stop_lock);
+	started = !data->simulation_stopped;
+	pthread_mutex_unlock(&data->stop_lock);
+	return (started);
+}
+
+void	start_simulation(t_data *data)
+{
+	pthread_mutex_lock(&data->stop_lock);
+	while (data->initial_queued < data->number_of_coders
+		&& !data->simulation_stopped)
+		pthread_cond_wait(&data->start_cond, &data->stop_lock);
+	if (!data->simulation_stopped)
+	{
+		record_start_time(data);
+		data->simulation_started = 1;
+	}
+	pthread_cond_broadcast(&data->start_cond);
 	pthread_mutex_unlock(&data->stop_lock);
 }

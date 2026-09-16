@@ -26,6 +26,8 @@
 # define SCHED_FIFO_STR			"fifo"
 # define SCHED_EDF_STR			"edf"
 # define DONGLE_POLL_MS			50
+# define DONGLE_QUEUE_CAP		2
+# define MONITOR_POLL_MS		1
 
 /* ---- Scheduler type ---- */
 typedef enum e_sched_type
@@ -54,6 +56,7 @@ typedef struct s_dongle	t_dongle;
 typedef struct s_heap_node
 {
 	long		key;
+	long		order;
 	int			coder_id;
 }	t_heap_node;
 
@@ -70,11 +73,9 @@ struct s_dongle
 {
 	int				id;
 	pthread_mutex_t	lock;
-	pthread_cond_t	cond;
 	int				is_available;
 	long			available_at_ms;
 	t_heap			waiting_queue;
-	long			request_counter;
 };
 
 /* ---- A single coder (one pthread each) ---- */
@@ -111,6 +112,15 @@ struct s_data
 	pthread_t		monitor_thread;
 	pthread_mutex_t	log_lock;
 	pthread_mutex_t	stop_lock;
+	pthread_cond_t	start_cond;
+	pthread_mutex_t	request_lock;
+	pthread_cond_t	request_cond;
+	long			request_counter;
+	int				initial_queued;
+	int				simulation_started;
+	int				sync_ready;
+	int				coders_ready;
+	int				dongles_ready;
 	int				simulation_stopped;
 };
 
@@ -125,21 +135,24 @@ int		init_dongles(t_data *data);
 int		heap_has_priority(t_heap_node *a, t_heap_node *b);
 void	heapify_up(t_heap *heap, int idx);
 void	heapify_down(t_heap *heap, int idx);
-int		heap_push(t_heap *heap, long key, int coder_id);
+int		heap_push(t_heap *heap, long key, long order, int coder_id);
 int		heap_pop(t_heap *heap, t_heap_node *out);
 int		heap_remove_by_id(t_heap *heap, int coder_id);
 
 /* ---- Dongle functions ---- */
-int		dongle_enqueue(t_coder *coder, t_dongle *dongle);
-void	dongle_dequeue(t_coder *coder, t_dongle *dongle);
+void	coder_drop_request(t_coder *coder);
+int		coder_queue_request(t_coder *coder);
+int		coder_try_pair(t_coder *coder, long *wake_ms);
 int		coder_acquire_dongles(t_coder *coder);
 void	dongle_release_single(t_coder *coder, t_dongle *dongle);
 void	coder_release_dongles(t_coder *coder);
 void	wake_all_dongles(t_data *data);
 
 /* ---- Coder functions ---- */
+int		wait_initial_slot(t_coder *coder);
+int		prepare_coder(t_coder *coder);
 void	*coder_routine(void *arg);
-void	coder_set_compile_start(t_coder *coder, long ts);
+int		coder_begin_compile(t_coder *coder);
 long	coder_get_last_compile_start(t_coder *coder);
 void	coder_increment_compiles(t_coder *coder);
 int		coder_get_compiles_done(t_coder *coder);
@@ -156,8 +169,11 @@ void	*monitor_routine(void *arg);
 void	clean_data(t_data *data);
 int		is_simulation_stopped(t_data *data);
 void	set_simulation_stopped(t_data *data);
+int		wait_for_start(t_data *data);
+void	start_simulation(t_data *data);
 void	record_start_time(t_data *data);
 long	get_timestamp_ms(t_data *data);
 void	ms_to_abstime(t_data *data, long target_ms, struct timespec *ts);
+int		sleep_ms(t_data *data, long duration);
 
 #endif

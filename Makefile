@@ -6,7 +6,7 @@
 #    By: fjose-hi <fjose-hi@student.42porto.com>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/08/17 21:06:09 by fjose-hi          #+#    #+#              #
-#    Updated: 2026/09/13 21:48:18 by fjose-hi         ###   ########.fr        #
+#    Updated: 2026/09/16 01:31:17 by fjose-hi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,8 +21,10 @@ SRCS =	src/main.c \
         src/heap/heap.c \
         src/heap/heap_utils.c \
         src/dongle/dongle_acquire.c \
+        src/dongle/dongle_pair.c \
         src/dongle/dongle_queue.c \
         src/dongle/dongle_release.c \
+		src/coder/coder_start.c \
 		src/coder/coder_routine.c \
         src/coder/coder_progress.c \
         src/log/log.c \
@@ -46,7 +48,7 @@ fclean: clean
 
 re: fclean all
 
-%.o: %.c
+%.o: %.c includes/codexion.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY: all clean fclean re

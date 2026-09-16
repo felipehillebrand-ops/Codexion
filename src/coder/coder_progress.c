@@ -12,11 +12,26 @@
 
 #include "codexion.h"
 
-void	coder_set_compile_start(t_coder *coder, long ts)
+int	coder_begin_compile(t_coder *coder)
 {
+	long	ts;
+	int		allowed;
+
+	pthread_mutex_lock(&coder->data->log_lock);
 	pthread_mutex_lock(&coder->progress_lock);
-	coder->last_compile_start = ts;
+	ts = get_timestamp_ms(coder->data);
+	allowed = !is_simulation_stopped(coder->data)
+		&& ts - coder->last_compile_start < coder->data->time_to_burnout;
+	if (allowed)
+	{
+		coder->last_compile_start = ts;
+		printf("%ld %d has taken a dongle\n", ts, coder->id);
+		printf("%ld %d has taken a dongle\n", ts, coder->id);
+		printf("%ld %d is compiling\n", ts, coder->id);
+	}
 	pthread_mutex_unlock(&coder->progress_lock);
+	pthread_mutex_unlock(&coder->data->log_lock);
+	return (allowed);
 }
 
 long	coder_get_last_compile_start(t_coder *coder)

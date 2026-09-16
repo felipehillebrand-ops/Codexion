@@ -19,29 +19,40 @@ static void	print_usage(char *prog_name)
 	fprintf(stderr, "number_of_compiles_required dongle_cooldown scheduler\n");
 }
 
-static int	run_simulation(t_data *data)
+static void	join_threads(t_data *data, int count)
 {
 	int	i;
 
 	i = 0;
-	while (i < data->number_of_coders)
-	{
-		if (pthread_create(&data->coders[i].thread, NULL,
-				coder_routine, &data->coders[i]) != 0)
-			return (fprintf(stderr, "Error: thread create failed\n"), -1);
-		i++;
-	}
-	if (pthread_create(&data->monitor_thread, NULL,
-			monitor_routine, data) != 0)
-		return (fprintf(stderr, "Error: monitor thread create failed\n"), -1);
-	i = 0;
-	while (i < data->number_of_coders)
+	while (i < count)
 	{
 		pthread_join(data->coders[i].thread, NULL);
 		i++;
 	}
 	pthread_join(data->monitor_thread, NULL);
-	return (0);
+}
+
+static int	run_simulation(t_data *data)
+{
+	int	i;
+
+	if (pthread_create(&data->monitor_thread, NULL,
+			monitor_routine, data) != 0)
+		return (-1);
+	i = 0;
+	while (i < data->number_of_coders)
+	{
+		if (pthread_create(&data->coders[i].thread, NULL,
+				coder_routine, &data->coders[i]) != 0)
+			break ;
+		i++;
+	}
+	if (i == data->number_of_coders)
+		start_simulation(data);
+	else
+		set_simulation_stopped(data);
+	join_threads(data, i);
+	return (!data->simulation_started);
 }
 
 int	main(int argc, char **argv)
@@ -49,16 +60,20 @@ int	main(int argc, char **argv)
 	t_data	data;
 	int		status;
 
+	memset(&data, 0, sizeof(data));
 	if (argc != ARG_COUNT)
 		return (print_usage(argv[0]), 1);
 	if (parse_args(&data, argv) != 0)
 		return (1);
 	if (init_data(&data) != 0)
-		return (1);
+	{
+		clean_data(&data);
+		return (fprintf(stderr, "Error: initialization failed\n"), 1);
+	}
 	status = run_simulation(&data);
 	print_debug_summary(&data);
 	clean_data(&data);
 	if (status != 0)
-		return (1);
+		return (fprintf(stderr, "Error: thread creation failed\n"), 1);
 	return (0);
 }

@@ -25,7 +25,9 @@ int	heap_has_priority(t_heap_node *a, t_heap_node *b)
 {
 	if (a->key != b->key)
 		return (a->key < b->key);
-	return (a->coder_id > b->coder_id);
+	if (a->order != b->order)
+		return (a->order < b->order);
+	return (a->coder_id < b->coder_id);
 }
 
 void	heapify_up(t_heap *heap, int idx)
