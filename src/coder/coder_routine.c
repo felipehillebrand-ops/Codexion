@@ -40,11 +40,10 @@ void	*coder_routine(void *arg)
 	int		compiled;
 
 	coder = (t_coder *)arg;
-	if (!prepare_coder(coder))
+	if (!prepare_coder(coder)
+		|| coder->data->number_of_compiles_required == 0)
 		return (NULL);
-	while (!is_simulation_stopped(coder->data)
-		&& coder_get_compiles_done(coder)
-		< coder->data->number_of_compiles_required)
+	while (!is_simulation_stopped(coder->data))
 	{
 		if (coder_acquire_dongles(coder) != 0)
 			break ;

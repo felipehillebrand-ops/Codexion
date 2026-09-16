@@ -117,6 +117,8 @@ struct s_data
 	pthread_cond_t	request_cond;
 	long			request_counter;
 	int				initial_queued;
+	int				coders_finished;
+	long			finished_at_ms;
 	int				simulation_started;
 	int				sync_ready;
 	int				coders_ready;

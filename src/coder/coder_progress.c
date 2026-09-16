@@ -46,9 +46,23 @@ long	coder_get_last_compile_start(t_coder *coder)
 
 void	coder_increment_compiles(t_coder *coder)
 {
+	t_data	*data;
+
+	data = coder->data;
+	pthread_mutex_lock(&data->log_lock);
 	pthread_mutex_lock(&coder->progress_lock);
-	coder->compiles_done++;
+	if (!is_simulation_stopped(data)
+		&& data->coders_finished < data->number_of_coders
+		&& coder->compiles_done < INT_MAX)
+	{
+		coder->compiles_done++;
+		if (coder->compiles_done == data->number_of_compiles_required)
+			data->coders_finished++;
+		if (data->coders_finished == data->number_of_coders)
+			data->finished_at_ms = get_timestamp_ms(data);
+	}
 	pthread_mutex_unlock(&coder->progress_lock);
+	pthread_mutex_unlock(&data->log_lock);
 }
 
 int	coder_get_compiles_done(t_coder *coder)

@@ -52,9 +52,10 @@ int	prepare_coder(t_coder *coder)
 
 static long	initial_delay(t_coder *coder)
 {
-	long	span;
-	long	rank;
-	int		half;
+	long		span;
+	long		rank;
+	long long	rest;
+	int			half;
 
 	half = coder->data->number_of_coders / 2;
 	if (half == 0 || coder->id == 1)
@@ -70,7 +71,8 @@ static long	initial_delay(t_coder *coder)
 		rank += half + 1;
 	if (span > LONG_MAX / 2)
 		return (LONG_MAX);
-	return ((span / half) * rank + (long long)(span % half) * rank / half);
+	rest = span % half;
+	return ((span / half) * rank + rest * rank / half);
 }
 
 int	wait_initial_slot(t_coder *coder)
